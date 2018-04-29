@@ -6,6 +6,7 @@ import altair as alt
 class AutoVega(ipw.VBox):
     def __init__(self, df):
         self.df = df.copy()
+        self.chart = alt.Chart(self.df)
 
         buts = [
             ('Table', self.on_table),
@@ -58,7 +59,7 @@ class AutoVega(ipw.VBox):
         k = change.owner.description
         v = change.new
         self.encoding[k] = v
-        # re-render chart. for now, reselect type button
+        self.redraw_chart()
 
     def on_table(self, button):
         with self.content:
@@ -67,18 +68,18 @@ class AutoVega(ipw.VBox):
             display(self._make_mimedict(), raw=True)
 
     def on_scatter(self, button):
-        c = alt.Chart(self.df).mark_point().encode(**self.encoding)
-        with self.content:
-            clear_output()
-            print('you picked Scatter')
-            display(c)
+        self.chart = self.chart.mark_point()
+        self.redraw_chart()
 
     def on_line(self, button):
-        c = alt.Chart(self.df).mark_line().encode(**self.encoding)
+        self.chart = self.chart.mark_line()
+        self.redraw_chart()
+
+    def redraw_chart(self):
+        self.chart = self.chart.encode(**self.encoding)
         with self.content:
             clear_output()
-            print('you picked Line')
-            display(c)
+            display(self.chart)
 
 def display_dataframe(df):
     av = AutoVega(df)
