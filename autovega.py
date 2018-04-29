@@ -38,7 +38,7 @@ class AutoVega(ipw.VBox):
         with self.content:
             display(self._make_mimedict(), raw=True)
 
-        super().__init__([self.toolbar, self.encoding_widget, self.content])
+        super().__init__([self.toolbar, self.content])
 
     def _make_mimedict(self):
         # this is essentially what display() does for dataframes,
@@ -82,6 +82,7 @@ class AutoVega(ipw.VBox):
     def redraw_chart(self):
         with self.content:
             clear_output()
+            display(self.encoding_widget)
             display(self.chart)
 
 def display_dataframe(df):
