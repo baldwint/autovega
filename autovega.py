@@ -21,7 +21,7 @@ class AutoVega(ipw.VBox):
         super().__init__([self.toolbar, self.content])
 
     def _build_encoding_widget(self):
-        self.dropdowns = []
+        dropdowns = []
         for desc,val in self.encoding.items():
             dd = ipw.Dropdown(
                     options=self.df.columns,
@@ -29,9 +29,9 @@ class AutoVega(ipw.VBox):
                     description=desc,
                     )
             dd.observe(self.on_encoding_changed, names='value')
-            self.dropdowns.append(dd)
+            dropdowns.append(dd)
 
-        return ipw.HBox(self.dropdowns)
+        return ipw.VBox(dropdowns)
 
 
     def _make_mimedict(self):
