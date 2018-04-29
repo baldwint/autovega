@@ -21,17 +21,18 @@ class AutoVega(ipw.VBox):
         super().__init__([self.toolbar, self.content])
 
     def _build_encoding_widget(self):
-        channels = ['x', 'y']
+        channels = ['x', 'y', 'color']
         controls = {}
         self.dropdowns = {} # dropdown lookup, so we can fetch the
                             # channel value when reenabling a channel.
                             # TODO: get rid of this somehow
+        self.checkboxes = {} # ditto
         for channel in channels:
             val = self.encoding.get(channel, None)
             dd = ipw.Dropdown(
                     options=self.df.columns,
                     value=val,
-                    description="{}:".format(channel),
+                    description="{}:".format(channel.title()),
                     )
             dd.channel = channel  # attach attribute for callback
             dd.observe(self.on_encoding_changed, names='value')
@@ -45,6 +46,7 @@ class AutoVega(ipw.VBox):
 
             controls[channel] = ipw.HBox([dd,cb])
             self.dropdowns[channel] = dd
+            self.checkboxes[channel] = cb
 
         return ipw.VBox([controls[c] for c in channels])
 
@@ -85,10 +87,12 @@ class AutoVega(ipw.VBox):
     def on_encoding_changed(self, change):
         """Callback function for the channel dropdowns
         """
-        k = change.owner.channel
-        v = change.new
-        self.encoding[k] = v
-        self.redraw_chart()
+        channel = change.owner.channel
+        value = change.new
+        checkbox = self.checkboxes[channel]
+        if checkbox.value:  # if this channel is enabled
+            self.encoding[channel] = value
+            self.redraw_chart()
 
     def on_encoding_enabled(self, change):
         """Callback function for the 'Enabled' checkbox
