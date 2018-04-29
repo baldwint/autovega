@@ -51,6 +51,7 @@ class AutoVega(ipw.VBox):
         mark_method_dict = {
                 'Scatter': self.chart.mark_point,
                 'Line': self.chart.mark_line,
+                'Bar': self.chart.mark_bar,
                 }
         return mark_method_dict
 
