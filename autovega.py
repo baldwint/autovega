@@ -14,6 +14,15 @@ class AutoVega(ipw.VBox):
         self.encoding = self.guess_encoding()
         self.chart = self.chart.encode(**self.encoding)
 
+        self.encoding_widget = self._build_encoding_widget()
+
+        self.content = ipw.Output()
+        with self.content:
+            display(self._make_mimedict(), raw=True)
+
+        super().__init__([self.toolbar, self.content])
+
+    def _build_encoding_widget(self):
         self.dropdowns = []
         for desc,val in self.encoding.items():
             dd = ipw.Dropdown(
@@ -24,13 +33,8 @@ class AutoVega(ipw.VBox):
             dd.observe(self.on_encoding_changed, names='value')
             self.dropdowns.append(dd)
 
-        self.encoding_widget = ipw.HBox(self.dropdowns)
+        return ipw.HBox(self.dropdowns)
 
-        self.content = ipw.Output()
-        with self.content:
-            display(self._make_mimedict(), raw=True)
-
-        super().__init__([self.toolbar, self.content])
 
     def _make_mimedict(self):
         # this is essentially what display() does for dataframes,
