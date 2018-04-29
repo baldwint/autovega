@@ -23,6 +23,8 @@ class AutoVega(ipw.VBox):
         self.toolbar = ipw.HBox(self.buttons)
 
         self.encoding = self.guess_encoding()
+        self.chart = self.chart.encode(**self.encoding)
+
         self.dropdowns = []
         for desc,val in self.encoding.items():
             dd = ipw.Dropdown(
@@ -59,6 +61,7 @@ class AutoVega(ipw.VBox):
         k = change.owner.description
         v = change.new
         self.encoding[k] = v
+        self.chart = self.chart.encode(**self.encoding)
         self.redraw_chart()
 
     def on_table(self, button):
@@ -76,7 +79,6 @@ class AutoVega(ipw.VBox):
         self.redraw_chart()
 
     def redraw_chart(self):
-        self.chart = self.chart.encode(**self.encoding)
         with self.content:
             clear_output()
             display(self.chart)
