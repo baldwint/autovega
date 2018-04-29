@@ -21,11 +21,24 @@ class AutoVega(ipw.VBox):
 
         self.toolbar = ipw.HBox(self.buttons)
 
+        self.encoding = self.guess_encoding()
+        self.dropdowns = []
+        for desc,val in self.encoding.items():
+            dd = ipw.Dropdown(
+                    options=self.df.columns,
+                    value=val,
+                    description=desc,
+                    )
+            dd.observe(self.on_encoding_changed, names='value')
+            self.dropdowns.append(dd)
+
+        self.encoding_widget = ipw.HBox(self.dropdowns)
+
         self.content = ipw.Output()
         with self.content:
             display(self._make_mimedict(), raw=True)
 
-        super().__init__([self.toolbar, self.content])
+        super().__init__([self.toolbar, self.encoding_widget, self.content])
 
     def _make_mimedict(self):
         # this is essentially what display() does for dataframes,
@@ -41,6 +54,12 @@ class AutoVega(ipw.VBox):
         x,y = self.df.columns[:2]
         return dict(x=x, y=y)
 
+    def on_encoding_changed(self, change):
+        k = change.owner.description
+        v = change.new
+        self.encoding[k] = v
+        # re-render chart. for now, reselect type button
+
     def on_table(self, button):
         with self.content:
             clear_output()
@@ -48,16 +67,14 @@ class AutoVega(ipw.VBox):
             display(self._make_mimedict(), raw=True)
 
     def on_scatter(self, button):
-        enc = self.guess_encoding()
-        c = alt.Chart(self.df).mark_point().encode(**enc)
+        c = alt.Chart(self.df).mark_point().encode(**self.encoding)
         with self.content:
             clear_output()
             print('you picked Scatter')
             display(c)
 
     def on_line(self, button):
-        enc = self.guess_encoding()
-        c = alt.Chart(self.df).mark_line().encode(**enc)
+        c = alt.Chart(self.df).mark_line().encode(**self.encoding)
         with self.content:
             clear_output()
             print('you picked Line')
