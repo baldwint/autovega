@@ -12,8 +12,6 @@ class AutoVega(ipw.VBox):
         self.toolbar.observe(self.on_chart_type_changed, names='value')
 
         self.encoding = self.guess_encoding()
-        self.chart = self.chart.encode(**self.encoding)
-
         self.encoding_widget = self._build_encoding_widget()
 
         self.content = ipw.Output()
@@ -72,7 +70,6 @@ class AutoVega(ipw.VBox):
         k = change.owner.description
         v = change.new
         self.encoding[k] = v
-        self.chart = self.chart.encode(**self.encoding)
         self.redraw_chart()
 
     def redraw_table(self):
@@ -81,10 +78,11 @@ class AutoVega(ipw.VBox):
             display(self._make_mimedict(), raw=True)
 
     def redraw_chart(self):
+        chart = self.chart.encode(**self.encoding)
         with self.content:
             clear_output()
             display(self.encoding_widget)
-            display(self.chart)
+            display(chart)
 
 def display_dataframe(df):
     av = AutoVega(df)
