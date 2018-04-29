@@ -21,26 +21,32 @@ class AutoVega(ipw.VBox):
         super().__init__([self.toolbar, self.content])
 
     def _build_encoding_widget(self):
-        controls = []
-        for desc,val in self.encoding.items():
+        channels = ['x', 'y']
+        controls = {}
+        self.dropdowns = {} # dropdown lookup, so we can fetch the
+                            # channel value when reenabling a channel.
+                            # TODO: get rid of this somehow
+        for channel in channels:
+            val = self.encoding.get(channel, None)
             dd = ipw.Dropdown(
                     options=self.df.columns,
                     value=val,
-                    description=desc,
+                    description="{}:".format(channel),
                     )
+            dd.channel = channel  # attach attribute for callback
             dd.observe(self.on_encoding_changed, names='value')
 
             cb = ipw.Checkbox(
-                    value=desc in self.encoding,
+                    value=channel in self.encoding,
                     description='Enabled',
                     )
-            cb.channel = desc  # attach attribute for callback
+            cb.channel = channel  # attach attribute for callback
             cb.observe(self.on_encoding_enabled, names='value')
 
-            controls.append(ipw.HBox([dd,cb]))
+            controls[channel] = ipw.HBox([dd,cb])
+            self.dropdowns[channel] = dd
 
-        return ipw.VBox(controls)
-
+        return ipw.VBox([controls[c] for c in channels])
 
     def _make_mimedict(self):
         # this is essentially what display() does for dataframes,
@@ -66,6 +72,8 @@ class AutoVega(ipw.VBox):
         return mark_method_dict
 
     def on_chart_type_changed(self, change):
+        """Callback function for the chart type toggle
+        """
         new_selection = change['new']
         if new_selection == 'Table':
             self.redraw_table()
@@ -75,20 +83,22 @@ class AutoVega(ipw.VBox):
             self.redraw_chart()
 
     def on_encoding_changed(self, change):
-        k = change.owner.description
+        """Callback function for the channel dropdowns
+        """
+        k = change.owner.channel
         v = change.new
         self.encoding[k] = v
         self.redraw_chart()
 
     def on_encoding_enabled(self, change):
-        print(change)
-        print(change.owner.channel)
+        """Callback function for the 'Enabled' checkbox
+        """
         channel = change.owner.channel
         if change.new is False:
             self.encoding.pop(channel)
         else:
-            # need to re-insert; how?
-            pass
+            dropdown = self.dropdowns[channel]
+            self.encoding[channel] = dropdown.value
         self.redraw_chart()
 
     def redraw_table(self):
