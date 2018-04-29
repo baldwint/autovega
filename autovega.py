@@ -35,6 +35,12 @@ class AutoVega(ipw.VBox):
                 "text/html": self.df._repr_html_()
                 }
 
+    def guess_encoding(self):
+        if len(self.df.columns) < 2:
+            raise Exception ('TODO: indexes')
+        x,y = self.df.columns[:2]
+        return dict(x=x, y=y)
+
     def on_table(self, button):
         with self.content:
             clear_output()
@@ -42,14 +48,16 @@ class AutoVega(ipw.VBox):
             display(self._make_mimedict(), raw=True)
 
     def on_scatter(self, button):
-        c = alt.Chart(self.df).mark_point().encode(x='ha', y='lo')
+        enc = self.guess_encoding()
+        c = alt.Chart(self.df).mark_point().encode(**enc)
         with self.content:
             clear_output()
             print('you picked Scatter')
             display(c)
 
     def on_line(self, button):
-        c = alt.Chart(self.df).mark_line().encode(x='ha', y='lo')
+        enc = self.guess_encoding()
+        c = alt.Chart(self.df).mark_line().encode(**enc)
         with self.content:
             clear_output()
             print('you picked Line')
