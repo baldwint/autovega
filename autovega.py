@@ -1,5 +1,5 @@
-from IPython.core.display import display
-from IPython.display import clear_output
+from collections import OrderedDict
+from IPython.display import display, clear_output
 import ipywidgets as ipw
 import altair as alt
 
@@ -8,19 +8,16 @@ class AutoVega(ipw.VBox):
         self.df = df.copy()
         self.chart = alt.Chart(self.df)
 
-        buts = [
+        self.chart_types = OrderedDict([
             ('Table', self.on_table),
             ('Scatter', self.on_scatter),
             ('Line', self.on_line),
-        ]
+        ])
 
-        self.buttons = []
-        for desc,callback in buts:
-            but = ipw.Button(description=desc)
-            but.on_click(callback)
-            self.buttons.append(but)
+        self.toolbar = ipw.ToggleButtons(options=self.chart_types.keys())
+        self.toolbar.observe(self.on_chart_type_changed, names='value')
 
-        self.toolbar = ipw.HBox(self.buttons)
+        self.chart_type = 'Table'
 
         self.encoding = self.guess_encoding()
         self.chart = self.chart.encode(**self.encoding)
@@ -57,6 +54,11 @@ class AutoVega(ipw.VBox):
         x,y = self.df.columns[:2]
         return dict(x=x, y=y)
 
+    def on_chart_type_changed(self, change):
+        self.chart_type = change['new']
+        func = self.chart_types[self.chart_type]
+        func()
+
     def on_encoding_changed(self, change):
         k = change.owner.description
         v = change.new
@@ -64,17 +66,16 @@ class AutoVega(ipw.VBox):
         self.chart = self.chart.encode(**self.encoding)
         self.redraw_chart()
 
-    def on_table(self, button):
+    def on_table(self):
         with self.content:
             clear_output()
-            print('you picked Table')
             display(self._make_mimedict(), raw=True)
 
-    def on_scatter(self, button):
+    def on_scatter(self):
         self.chart = self.chart.mark_point()
         self.redraw_chart()
 
-    def on_line(self, button):
+    def on_line(self):
         self.chart = self.chart.mark_line()
         self.redraw_chart()
 
