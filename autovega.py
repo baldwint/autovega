@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from IPython.display import display, clear_output
 import ipywidgets as ipw
 import altair as alt
@@ -8,16 +7,9 @@ class AutoVega(ipw.VBox):
         self.df = df.copy()
         self.chart = alt.Chart(self.df)
 
-        self.chart_types = OrderedDict([
-            ('Table', self.on_table),
-            ('Scatter', self.on_scatter),
-            ('Line', self.on_line),
-        ])
-
-        self.toolbar = ipw.ToggleButtons(options=self.chart_types.keys())
+        chart_types = ['Table',] + list(self._mark_methods.keys())
+        self.toolbar = ipw.ToggleButtons(options=chart_types)
         self.toolbar.observe(self.on_chart_type_changed, names='value')
-
-        self.chart_type = 'Table'
 
         self.encoding = self.guess_encoding()
         self.chart = self.chart.encode(**self.encoding)
@@ -54,10 +46,22 @@ class AutoVega(ipw.VBox):
         x,y = self.df.columns[:2]
         return dict(x=x, y=y)
 
+    @property
+    def _mark_methods(self):
+        mark_method_dict = {
+                'Scatter': self.chart.mark_point,
+                'Line': self.chart.mark_line,
+                }
+        return mark_method_dict
+
     def on_chart_type_changed(self, change):
-        self.chart_type = change['new']
-        func = self.chart_types[self.chart_type]
-        func()
+        new_selection = change['new']
+        if new_selection == 'Table':
+            self.redraw_table()
+        else:
+            mark_func = self._mark_methods[new_selection]
+            self.chart = mark_func()
+            self.redraw_chart()
 
     def on_encoding_changed(self, change):
         k = change.owner.description
@@ -66,18 +70,10 @@ class AutoVega(ipw.VBox):
         self.chart = self.chart.encode(**self.encoding)
         self.redraw_chart()
 
-    def on_table(self):
+    def redraw_table(self):
         with self.content:
             clear_output()
             display(self._make_mimedict(), raw=True)
-
-    def on_scatter(self):
-        self.chart = self.chart.mark_point()
-        self.redraw_chart()
-
-    def on_line(self):
-        self.chart = self.chart.mark_line()
-        self.redraw_chart()
 
     def redraw_chart(self):
         with self.content:
