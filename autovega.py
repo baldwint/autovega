@@ -21,7 +21,7 @@ class AutoVega(ipw.VBox):
         super().__init__([self.toolbar, self.content])
 
     def _build_encoding_widget(self):
-        dropdowns = []
+        controls = []
         for desc,val in self.encoding.items():
             dd = ipw.Dropdown(
                     options=self.df.columns,
@@ -29,9 +29,17 @@ class AutoVega(ipw.VBox):
                     description=desc,
                     )
             dd.observe(self.on_encoding_changed, names='value')
-            dropdowns.append(dd)
 
-        return ipw.VBox(dropdowns)
+            cb = ipw.Checkbox(
+                    value=desc in self.encoding,
+                    description='Enabled',
+                    )
+            cb.channel = desc  # attach attribute for callback
+            cb.observe(self.on_encoding_enabled, names='value')
+
+            controls.append(ipw.HBox([dd,cb]))
+
+        return ipw.VBox(controls)
 
 
     def _make_mimedict(self):
@@ -70,6 +78,17 @@ class AutoVega(ipw.VBox):
         k = change.owner.description
         v = change.new
         self.encoding[k] = v
+        self.redraw_chart()
+
+    def on_encoding_enabled(self, change):
+        print(change)
+        print(change.owner.channel)
+        channel = change.owner.channel
+        if change.new is False:
+            self.encoding.pop(channel)
+        else:
+            # need to re-insert; how?
+            pass
         self.redraw_chart()
 
     def redraw_table(self):
