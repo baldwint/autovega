@@ -3,6 +3,8 @@ import ipywidgets as ipw
 import traitlets as t
 import altair as alt
 
+__version__ = "0.1.dev0"
+
 class ChannelWidget(ipw.HBox):
     """Provides a GUI control for a single Vega channel (X, Y, etc.)
     """
