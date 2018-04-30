@@ -87,7 +87,8 @@ class AutoVega(ipw.VBox):
 
     def guess_encoding(self):
         if len(self.df.columns) < 2:
-            raise Exception ('TODO: indexes')
+            x = self.df.columns[0]
+            return dict(x=x)
         x,y = self.df.columns[:2]
         return dict(x=x, y=y)
 
