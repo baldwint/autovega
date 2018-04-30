@@ -1,6 +1,44 @@
 from IPython.display import display, clear_output
 import ipywidgets as ipw
+import traitlets as t
 import altair as alt
+
+class ChannelWidget(ipw.HBox):
+    """Provides a GUI control for a single Vega channel (X, Y, etc.)
+    """
+    enabled = t.Bool()
+    value = t.Any()
+
+    def __init__(self, channel, options, value=None, enabled=False):
+        self.channel = channel
+        self.options = options
+        self.enabled = enabled
+        self.value = value
+
+        self.dropdown = ipw.Dropdown(
+                options=self.options,
+                value=value,
+                description="{}:".format(channel.title()),
+                )
+        self.dropdown.observe(self.on_value_changed, names='value')
+
+        self.checkbox = ipw.Checkbox(
+                value=enabled,
+                description='Enabled',
+                )
+        self.checkbox.observe(self.on_enable_changed, names='value')
+
+        super().__init__([self.dropdown, self.checkbox])
+
+    def on_value_changed(self, change):
+        self.value = change['new']
+
+    def on_enable_changed(self, change):
+        enabled = change['new']
+        if self.dropdown.value is None:
+            # make sure this is not null otherwise the plot will fail
+            self.dropdown.index = 0  # pick out first option
+        self.enabled = enabled
 
 class AutoVega(ipw.VBox):
     def __init__(self, df):
@@ -11,8 +49,8 @@ class AutoVega(ipw.VBox):
         self.toolbar = ipw.ToggleButtons(options=chart_types)
         self.toolbar.observe(self.on_chart_type_changed, names='value')
 
-        self.encoding = self.guess_encoding()
-        self.encoding_widget = self._build_encoding_widget()
+        initial_encoding = self.guess_encoding()
+        self.encoding_widget = self._build_encoding_widget(initial_encoding)
 
         self.content = ipw.Output()
         with self.content:
@@ -20,35 +58,22 @@ class AutoVega(ipw.VBox):
 
         super().__init__([self.toolbar, self.content])
 
-    def _build_encoding_widget(self):
+    def _build_encoding_widget(self, initial_encoding):
         channels = ['x', 'y', 'color']
-        controls = {}
-        self.dropdowns = {} # dropdown lookup, so we can fetch the
-                            # channel value when reenabling a channel.
-                            # TODO: get rid of this somehow
-        self.checkboxes = {} # ditto
+        self.controls = []
         for channel in channels:
-            val = self.encoding.get(channel, None)
-            dd = ipw.Dropdown(
-                    options=self.df.columns,
-                    value=val,
-                    description="{}:".format(channel.title()),
+            control = ChannelWidget(channel,
+                    self.df.columns,
+                    value=initial_encoding.get(channel, None),
+                    enabled=(channel in initial_encoding),
                     )
-            dd.channel = channel  # attach attribute for callback
-            dd.observe(self.on_encoding_changed, names='value')
-
-            cb = ipw.Checkbox(
-                    value=channel in self.encoding,
-                    description='Enabled',
+            control.observe(
+                    self.on_encoding_changed,
+                    names=['value', 'enabled'],
                     )
-            cb.channel = channel  # attach attribute for callback
-            cb.observe(self.on_encoding_enabled, names='value')
+            self.controls.append(control)
 
-            controls[channel] = ipw.HBox([dd,cb])
-            self.dropdowns[channel] = dd
-            self.checkboxes[channel] = cb
-
-        return ipw.VBox([controls[c] for c in channels])
+        return ipw.VBox(self.controls)
 
     def _make_mimedict(self):
         # this is essentially what display() does for dataframes,
@@ -63,6 +88,10 @@ class AutoVega(ipw.VBox):
             raise Exception ('TODO: indexes')
         x,y = self.df.columns[:2]
         return dict(x=x, y=y)
+
+    @property
+    def encoding(self):
+        return {c.channel: c.value for c in self.controls if c.enabled}
 
     @property
     def _mark_methods(self):
@@ -85,24 +114,6 @@ class AutoVega(ipw.VBox):
             self.redraw_chart()
 
     def on_encoding_changed(self, change):
-        """Callback function for the channel dropdowns
-        """
-        channel = change.owner.channel
-        value = change.new
-        checkbox = self.checkboxes[channel]
-        if checkbox.value:  # if this channel is enabled
-            self.encoding[channel] = value
-            self.redraw_chart()
-
-    def on_encoding_enabled(self, change):
-        """Callback function for the 'Enabled' checkbox
-        """
-        channel = change.owner.channel
-        if change.new is False:
-            self.encoding.pop(channel)
-        else:
-            dropdown = self.dropdowns[channel]
-            self.encoding[channel] = dropdown.value
         self.redraw_chart()
 
     def redraw_table(self):
