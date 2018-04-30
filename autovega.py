@@ -56,7 +56,7 @@ class ChannelWidget(ipw.HBox):
 
     def on_enable_changed(self, change):
         enabled = change['new']
-        if self.dropdown.value is None:
+        if enabled and self.dropdown.value is None:
             # make sure this is not null otherwise the plot will fail
             self.dropdown.index = 0  # pick out first option
         self.enabled = enabled
