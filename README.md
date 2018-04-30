@@ -33,3 +33,6 @@ Or, for the development version:
 pip install -e git+https://github.com/baldwint/autovega.git#egg=autovega
 ```
 
+## Prior Art
+
+This module is inspired by [autovizwidget](https://github.com/jupyter-incubator/sparkmagic/tree/master/autovizwidget), which provides a similar functionality using Plotly as backend.
