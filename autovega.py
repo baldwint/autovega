@@ -1,3 +1,22 @@
+"""autovega
+
+This module provides an IPython/Jupyter notebook widget for quick
+visualization of Pandas dataframes using Vega and Altair.
+
+To use the autovega widget whenever Jupyter displays a dataframe, call
+the `register_renderer` function at the top of your notebook.
+
+>>> import autovega
+>>> autovega.register_renderer()
+>>> df  # displays dataframe, plus a visualization GUI
+
+Alternatively, to use the widget more selectively, use the
+`display_dataframe` function to wrap your dataframes when you want to
+use the GUI.
+
+>>> autovega.display_dataframe(df)  # same effect, without register_renderer
+
+"""
 from IPython.display import display, clear_output
 import ipywidgets as ipw
 import traitlets as t
@@ -43,6 +62,14 @@ class ChannelWidget(ipw.HBox):
         self.enabled = enabled
 
 class AutoVega(ipw.VBox):
+    """Jupyter widget GUI for displaying dataframes as Vega plots.
+
+    When displayed in the notebook, shows the passed dataframe as a
+    Table along with a plot type chooser. When something other than
+    'Table' is chosen, swaps view out for a Vega plot and a GUI for
+    configuring the plot encoding.
+
+    """
     def __init__(self, df):
         self.df = df.copy()
         self.chart = alt.Chart(self.df)
@@ -78,8 +105,11 @@ class AutoVega(ipw.VBox):
         return ipw.VBox(self.controls)
 
     def _make_mimedict(self):
+        """Raw MIME representation of a dataframe.
+        """
         # this is essentially what display() does for dataframes,
-        # but we might be overriding that
+        # but we might have overridden the display function
+        # so we need to use the raw form to avoid recursion
         return {
                 "text/plain": repr(self.df),
                 "text/html": self.df._repr_html_()
@@ -132,10 +162,14 @@ class AutoVega(ipw.VBox):
             display(chart)
 
 def display_dataframe(df):
+    """Display autovega display widget for a dataframe.
+    """
     av = AutoVega(df)
     display(av)
 
 def register_renderer(func=display_dataframe):
+    """Sets autovega as the default renderer for dataframes in Jupyter.
+    """
     ip = get_ipython()
     prev_formatter = (ip.display_formatter
             .ipython_display_formatter
