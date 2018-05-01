@@ -2,7 +2,7 @@ from setuptools import setup
 import sys
 
 # build dependency list
-reqs = ['altair>=2', 'vega3', 'ipywidgets', 'IPython', 'ipywidgets']
+reqs = ['altair>=2.0.0rc2', 'vega3', 'ipywidgets', 'IPython', 'ipywidgets']
 
 # http://stackoverflow.com/a/7071358/735926
 import re
