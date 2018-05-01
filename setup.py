@@ -1,5 +1,4 @@
 from setuptools import setup
-import sys
 
 # build dependency list
 reqs = ['altair>=2.0.0rc2', 'vega3', 'ipywidgets', 'IPython', 'ipywidgets']
@@ -23,6 +22,7 @@ setup(name='autovega',
       description='An IPython/Jupyter notebook widget'
       ' for quick visualization of Pandas dataframes',
       long_description=readme,
+      long_description_content_type='text/markdown',
       url='https://github.com/baldwint/autovega',
       author='Tom Baldwin',
       author_email='baldwint@baldwint.com',
