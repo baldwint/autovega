@@ -39,5 +39,5 @@ setup(name='autovega',
           'Programming Language :: Python :: 3.6',
       ),
       install_requires=reqs,
-      py_modules=['autovega.py'],
+      py_modules=['autovega'],
       )
