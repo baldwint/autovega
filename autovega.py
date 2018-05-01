@@ -18,17 +18,17 @@ use the GUI.
 
 """
 from IPython.display import display, clear_output
-import ipywidgets as ipw
-import traitlets as t
+import ipywidgets as widgets
+import traitlets
 import altair as alt
 
 __version__ = "0.1.dev1"
 
-class ChannelWidget(ipw.HBox):
+class ChannelWidget(widgets.HBox):
     """Provides a GUI control for a single Vega channel (X, Y, etc.)
     """
-    enabled = t.Bool()
-    value = t.Any()
+    enabled = traitlets.Bool()
+    value = traitlets.Any()
 
     def __init__(self, channel, options, value=None, enabled=False):
         self.channel = channel
@@ -36,14 +36,14 @@ class ChannelWidget(ipw.HBox):
         self.enabled = enabled
         self.value = value
 
-        self.dropdown = ipw.Dropdown(
+        self.dropdown = widgets.Dropdown(
                 options=self.options,
                 value=value,
                 description="{}:".format(channel.title()),
                 )
         self.dropdown.observe(self.on_value_changed, names='value')
 
-        self.checkbox = ipw.Checkbox(
+        self.checkbox = widgets.Checkbox(
                 value=enabled,
                 description='Enabled',
                 )
@@ -61,7 +61,7 @@ class ChannelWidget(ipw.HBox):
             self.dropdown.index = 0  # pick out first option
         self.enabled = enabled
 
-class AutoVega(ipw.VBox):
+class AutoVega(widgets.VBox):
     """Jupyter widget GUI for displaying dataframes as Vega plots.
 
     When displayed in the notebook, shows the passed dataframe as a
@@ -75,13 +75,13 @@ class AutoVega(ipw.VBox):
         self.chart = alt.Chart(self.df)
 
         chart_types = ['Table',] + list(self._mark_methods.keys())
-        self.toolbar = ipw.ToggleButtons(options=chart_types)
+        self.toolbar = widgets.ToggleButtons(options=chart_types)
         self.toolbar.observe(self.on_chart_type_changed, names='value')
 
         initial_encoding = self.guess_encoding()
         self.encoding_widget = self._build_encoding_widget(initial_encoding)
 
-        self.content = ipw.Output()
+        self.content = widgets.Output()
         with self.content:
             display(self._make_mimedict(), raw=True)
 
@@ -102,7 +102,7 @@ class AutoVega(ipw.VBox):
                     )
             self.controls.append(control)
 
-        return ipw.VBox(self.controls)
+        return widgets.VBox(self.controls)
 
     def _make_mimedict(self):
         """Raw MIME representation of a dataframe.
