@@ -2,6 +2,8 @@
 
 `autovega` is an IPython/Jupyter notebook widget for quick visualization of Pandas dataframes using [Vega](https://vega.github.io/) and [Altair](https://altair-viz.github.io/).
 
+![Usage Screencast](screencast.gif)
+
 ## Usage
 
 Import autovega and call `register_renderer` at the top of your notebook.
